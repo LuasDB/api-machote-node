@@ -5,12 +5,18 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { logErrors,errorHandler} from './middlewares/hanldeErrors.js'
 import { client } from './db/mongoClient.js'
+import swaggerUi from 'swagger-ui-express'
+import { readFile } from 'fs/promises'
+
+const data = await readFile('./api_documentation.json', 'utf-8')
+const swaggerDoc = JSON.parse(data)
 
 const port = 3000 || process.env.PORT
 //Express
 const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc))
 //Ejecutamos CORS, primero crearemos las url a las que le daremos acceso
   // const whitelist = ['http://localhost:3000','http://127.0.0.1'];
   // const options ={
@@ -58,6 +64,7 @@ const startServer = async ()=>{
     AppRouter(app,io)
     app.use(logErrors)
     app.use(errorHandler)
+
     app.use('/uploads', express.static('uploads'))
 
     httpServer.listen(3000,()=>{

@@ -26,6 +26,4 @@ const collectionsRouter = (io)=>{
   return router
 }
 
-
-
 export default collectionsRouter
