@@ -38,6 +38,35 @@ class Collection{
     }
   }
 
+  async search(collection,q,page, limit){
+
+    try {
+      const pageNumber= Number(page)
+      const limitNumber = Number(limit)
+      const skip = (pageNumber - 1) * limitNumber
+
+      const totalDocuments = await db.collection(collection)
+      .countDocuments({
+        campo1:{$regex:q , $options:"i"}
+      })
+
+      const result = await db.collection(collection)
+      .find({campo1:{$regex:q, $options: "i"}})
+      .skip(skip)
+      .limit(limitNumber)
+      .toArray()
+
+      return {data:result,total:totalDocuments,pages:Math.ceil(totalDocuments/limitNumber)}
+    } catch (error) {
+      if(Boom.isBoom(error)){
+        throw error
+      }else{
+      throw Boom.badImplementation('Algo se recibio mal',error)
+
+    }
+  }
+}
+
   async addFIles(collection,files,data){
     try {
 

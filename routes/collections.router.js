@@ -25,6 +25,22 @@ const collectionsRouter = (io)=>{
     }
   })
 
+  router.get('/:collection/search/',async(req,res,next)=>{
+    try{
+      const { collection} = req.params
+      const { q,page,limit } = req.query
+
+      const serach = await collections.search(collection,q,page,limit)
+      res.status(200).json({
+        success:true,
+        message:'Documentos encontrados',
+        data:serach
+      })
+    }catch(error){
+      next(error)
+    }
+  })
+
   router.get('/:collection/:id',async(req,res,next)=>{
     try {
       const { collection, id } = req.params
@@ -41,6 +57,8 @@ const collectionsRouter = (io)=>{
       next(error)
     }
   })
+
+
 
   router.post('/create/:collection',async(req,res,next)=>{
 
