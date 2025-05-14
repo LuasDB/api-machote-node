@@ -58,8 +58,6 @@ const collectionsRouter = (io)=>{
     }
   })
 
-
-
   router.post('/create/:collection',async(req,res,next)=>{
 
     try {
@@ -103,11 +101,27 @@ const collectionsRouter = (io)=>{
           data:addFiles
         })
       } catch (error) {
-        throw Boom.unsupportedMediaType('No se pudieron guardar los archivos')
+        next(error)
       }
 
 
     })
+  })
+
+  router.post('/example-email-handlebars',async(req,res,next)=>{
+    try {
+      const sendEmail = await collections.sendEmail(req.body)
+
+      res.status(200).json(
+        {
+          success:true,
+          message:'Correo enviado',
+          data:sendEmail
+        }
+      )
+    } catch (error) {
+      next(error)
+    }
   })
 
   router.patch('/update-one/:collection/:id',async(req,res,next)=>{

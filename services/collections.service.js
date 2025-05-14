@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb'
 import { db } from './../db/mongoClient.js'
 import Boom from '@hapi/boom'
+import { sendMail } from '../utils/sendMail.js'
+import path from 'path'
 
 class Collection{
   constructor(){
@@ -82,6 +84,24 @@ class Collection{
       }else{
       throw Boom.badImplementation('Algo falto aqui para subir',error)}
     }
+  }
+
+  async sendEmail(body){
+    const { email,name, message } = body
+
+    await sendMail({
+      to:email,
+      subject:'Test de envio de mail',
+      data:{email,name,message,link:'http://localhost:3000/uploads/pruebas/C.V.MARIOSAULDELAFUENTEBARRUETA__esp2025.pdf'},
+      templateEmail:'test',
+      attachments:[{
+        filename:'samartech',
+        path:path.join('uploads/pruebas/samartech.png'),
+        cid:'samartech'
+      }]
+    })
+
+
   }
 
   async getOneById(collection,id){
