@@ -8,7 +8,7 @@ import { client } from './db/mongoClient.js'
 import swaggerUi from 'swagger-ui-express'
 import { readFile } from 'fs/promises'
 
-const data = await readFile('./api_documentation.json', 'utf-8')
+const data = await readFile('./api_documentation_swaggerUi.json', 'utf-8')
 const swaggerDoc = JSON.parse(data)
 
 const port = 3000 || process.env.PORT

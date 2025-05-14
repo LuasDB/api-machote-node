@@ -1,22 +1,14 @@
 import { db } from './../db/mongoClient.js'
-import nodemailer from 'nodemailer'
 import Boom from '@hapi/boom'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import config from '../config.js'
-import { restablecerPass } from '../templates/restablecerPass.js'
+import { sendMail } from './../utils/sendMail.js'
+import path from 'path'
 
 class Auth{
   constructor(){
-    this.jwtSecret = config.jwtSecret,
-    this.jwtExpiration = '1h',
-    this.mailTransporter = nodemailer.createTransport({
-      service:'gmail',
-      auth:{
-        user:config.emailSupport,
-        pass:config.passSupport
-      }
-    })
+
   }
 
   async create(data){
@@ -37,6 +29,28 @@ class Auth{
       data.password = hashedPassword
 
       const result = await db.collection('users').insertOne(data)
+
+      if(result.insertedId){
+        const resetToken = jwt.sign(
+          { userId: result.insertedId,email },
+          config.jwtSecret,
+          { expiresIn: '1h' }
+        );
+
+        const resetLink = `${config.urlApp}/reset-password?token=${resetToken}`
+
+        sendMail({
+          to:email,
+          subject:'Creación de contraseña',
+          data:{name,company,resetLink},
+          templateEmail:'register',
+          attachments:[{
+            filename:'samartech',
+            path:path.join('emails/samartech.png'),
+            cid:'logo_empresa'
+          }]
+        })
+      }
 
       return {id:result.insertedId,email}
     } catch (error) {
@@ -79,39 +93,29 @@ class Auth{
 
   async forgotPassword(data){
     try {
+      console.log(data)
       const { email } = data
       const user = await this.getUserByEmail(email)
 
       const resetToken = jwt.sign(
         { userId: user._id,email:user.email },
-        this.jwtSecret,
+        config.jwtSecret,
         { expiresIn: '1min' }
       );
 
       const resetLink = `${config.urlApp}/reset-password?token=${resetToken}`
-
-      const mailOptions = {
-        from:config.emailSupport,
+      sendMail({
         to:email,
-        subject:'Restablecer contraseña',
-        html:restablecerPass(resetLink,config.server)
-      }
-
-
-      await this.mailTransporter.sendMail(mailOptions,(error,info)=>{
-        console.log('enviando correo...')
-
-        if(error){
-          console.error('Error al enviar el correo ',error)
-
-        }else{
-          console.log('Correo enviado:', info.response)
-        }
+        subject:'Creación de contraseña',
+        data:{name:user.name,resetLink},
+        templateEmail:'restartPass',
+        attachments:[{
+          filename:'samartech',
+            path:path.join('emails/samartech.png'),
+            cid:'logo_empresa'
+        }]
       })
-
       return 'Se ha enviado un enlace de restablecimiento de contraseña a tu correo.'
-
-
     } catch (error) {
       if(Boom.isBoom(error)){
         throw error
