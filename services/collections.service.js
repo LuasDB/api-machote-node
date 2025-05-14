@@ -49,11 +49,11 @@ class Collection{
 
       const totalDocuments = await db.collection(collection)
       .countDocuments({
-        campo1:{$regex:q , $options:"i"}
+        descripcion:{$regex:q , $options:"i"}
       })
 
       const result = await db.collection(collection)
-      .find({campo1:{$regex:q, $options: "i"}})
+      .find({descripcion:{$regex:q, $options: "i"}})
       .skip(skip)
       .limit(limitNumber)
       .toArray()
@@ -67,7 +67,7 @@ class Collection{
 
     }
   }
-}
+  }
 
   async addFIles(collection,files,data){
     try {

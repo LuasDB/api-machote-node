@@ -15,7 +15,7 @@ class Auth{
 
     try {
       const { name, email, password } = data
-      if(!name || !email || !password){
+      if(!name || !email ){
         throw Boom.badData('Todos los datos son necesarios')
       }
 
@@ -25,8 +25,11 @@ class Auth{
         throw Boom.conflict(`El usuario con correo ${email} ya existe`);
       }
 
-      const hashedPassword = await bcrypt.hash(password,10);
-      data.password = hashedPassword
+      if(password){
+        const hashedPassword = await bcrypt.hash(password,10);
+        data.password = hashedPassword
+      }
+
 
       const result = await db.collection('users').insertOne(data)
 
@@ -38,21 +41,24 @@ class Auth{
         );
 
         const resetLink = `${config.urlApp}/reset-password?token=${resetToken}`
+        if(!password){
+          sendMail({
+            to:email,
+            subject:'Creación de contraseña',
+            data:{name,company,resetLink},
+            templateEmail:'register',
+            attachments:[{
+              filename:'samartech',
+              path:path.join('emails/samartech.png'),
+              cid:'logo_empresa'
+            }]
+          })
+        }
 
-        sendMail({
-          to:email,
-          subject:'Creación de contraseña',
-          data:{name,company,resetLink},
-          templateEmail:'register',
-          attachments:[{
-            filename:'samartech',
-            path:path.join('emails/samartech.png'),
-            cid:'logo_empresa'
-          }]
-        })
+        return {id:result.insertedId,email}
+
       }
 
-      return {id:result.insertedId,email}
     } catch (error) {
       if(Boom.isBoom(error)){
         throw error
